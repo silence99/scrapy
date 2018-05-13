@@ -55,6 +55,7 @@ structure by default, similar to this::
    myproject/
        __init__.py
        items.py
+       middlewares.py
        pipelines.py
        settings.py
        spiders/
@@ -187,7 +188,7 @@ startproject
 
 Creates a new Scrapy project named ``project_name``, under the ``project_dir``
 directory.
-If ``project_dir`` wasn't specified, ``project_dir`` will be the same as ``myproject``.
+If ``project_dir`` wasn't specified, ``project_dir`` will be the same as ``project_name``.
 
 Usage example::
 
@@ -291,12 +292,12 @@ edit
 * Syntax: ``scrapy edit <spider>``
 * Requires project: *yes*
 
-Edit the given spider using the editor defined in the :setting:`EDITOR`
-setting.
+Edit the given spider using the editor defined in the ``EDITOR`` environment
+variable or (if unset) the :setting:`EDITOR` setting.
 
 This command is provided only as a convenience shortcut for the most common
 case, the developer is of course free to choose any tool or IDE to write and
-debug his spiders.
+debug spiders.
 
 Usage example::
 
@@ -357,6 +358,12 @@ view
 Opens the given URL in a browser, as your Scrapy spider would "see" it.
 Sometimes spiders see pages differently from regular users, so this can be used
 to check what the spider "sees" and confirm it's what you expect.
+
+Supported options:
+
+* ``--spider=SPIDER``: bypass spider autodetection and force use of specific spider
+
+* ``--no-redirect``: do not follow HTTP 3xx redirects (default is to follow them)
 
 Usage example::
 
@@ -423,6 +430,9 @@ Supported options:
 
 * ``--callback`` or ``-c``: spider method to use as callback for parsing the
   response
+
+* ``--meta`` or ``-m``: additional request meta that will be passed to the callback 
+  request. This must be a valid json string. Example: --meta='{"foo" : "bar"}'
 
 * ``--pipelines``: process items through pipelines
 
@@ -537,7 +547,7 @@ Example::
 
     COMMANDS_MODULE = 'mybot.commands'
 
-.. _Deploying your project: http://scrapyd.readthedocs.org/en/latest/deploy.html
+.. _Deploying your project: https://scrapyd.readthedocs.io/en/latest/deploy.html
 
 Register commands via setup.py entry points
 -------------------------------------------

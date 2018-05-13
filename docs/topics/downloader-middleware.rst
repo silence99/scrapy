@@ -157,6 +157,17 @@ more of the following methods:
       :param spider: the spider for which this request is intended
       :type spider: :class:`~scrapy.spiders.Spider` object
 
+   .. method:: from_crawler(cls, crawler)
+
+      If present, this classmethod is called to create a middleware instance
+      from a :class:`~scrapy.crawler.Crawler`. It must return a new instance
+      of the middleware. Crawler object provides access to all Scrapy core
+      components like settings and signals; it is a way for middleware to
+      access them and hook its functionality into Scrapy.
+
+      :param crawler: crawler that uses this middleware
+      :type crawler: :class:`~scrapy.crawler.Crawler` object
+
 .. _topics-downloader-middleware-ref:
 
 Built-in downloader middleware reference
@@ -225,6 +236,15 @@ Default: ``True``
 
 Whether to enable the cookies middleware. If disabled, no cookies will be sent
 to web servers.
+
+Notice that despite the value of :setting:`COOKIES_ENABLED` setting if
+``Request.``:reqmeta:`meta['dont_merge_cookies'] <dont_merge_cookies>`
+evaluates to ``True`` the request cookies will **not** be sent to the
+web server and received cookies in :class:`~scrapy.http.Response` will
+**not** be merged with the existing cookies.
+
+For more detailed information see the ``cookies`` parameter in
+:class:`~scrapy.http.Request`.
 
 .. setting:: COOKIES_DEBUG
 
@@ -318,10 +338,11 @@ HttpCacheMiddleware
     This middleware provides low-level cache to all HTTP requests and responses.
     It has to be combined with a cache storage backend as well as a cache policy.
 
-    Scrapy ships with two HTTP cache storage backends:
+    Scrapy ships with three HTTP cache storage backends:
 
         * :ref:`httpcache-storage-fs`
         * :ref:`httpcache-storage-dbm`
+        * :ref:`httpcache-storage-leveldb`
 
     You can change the HTTP cache storage backend with the :setting:`HTTPCACHE_STORAGE`
     setting. Or you can also implement your own storage backend.
@@ -644,6 +665,12 @@ HttpCompressionMiddleware
    This middleware allows compressed (gzip, deflate) traffic to be
    sent/received from web sites.
 
+   This middleware also supports decoding `brotli-compressed`_ responses,
+   provided `brotlipy`_ is installed.
+
+.. _brotli-compressed: https://www.ietf.org/rfc/rfc7932.txt
+.. _brotlipy: https://pypi.python.org/pypi/brotlipy
+
 HttpCompressionMiddleware Settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -680,7 +707,9 @@ HttpProxyMiddleware
    * ``no_proxy``
 
    You can also set the meta key ``proxy`` per-request, to a value like
-   ``http://some_proxy_server:port``.
+   ``http://some_proxy_server:port`` or ``http://username:password@some_proxy_server:port``.
+   Keep in mind this value will take precedence over ``http_proxy``/``https_proxy``
+   environment variables, and it will also ignore ``no_proxy`` environment variable.
 
 .. _urllib: https://docs.python.org/2/library/urllib.html
 .. _urllib2: https://docs.python.org/2/library/urllib2.html
@@ -748,7 +777,7 @@ REDIRECT_MAX_TIMES
 
 Default: ``20``
 
-The maximum number of redirections that will be follow for a single request.
+The maximum number of redirections that will be followed for a single request.
 
 MetaRefreshMiddleware
 ---------------------
@@ -842,6 +871,11 @@ RETRY_TIMES
 Default: ``2``
 
 Maximum number of times to retry, in addition to the first download.
+
+Maximum number of retries can also be specified per-request using
+:reqmeta:`max_retry_times` attribute of :attr:`Request.meta <scrapy.http.Request.meta>`.
+When initialized, the :reqmeta:`max_retry_times` meta key takes higher
+precedence over the :setting:`RETRY_TIMES` setting.
 
 .. setting:: RETRY_HTTP_CODES
 
@@ -948,7 +982,15 @@ enable it for :ref:`broad crawls <topics-broad-crawls>`.
 HttpProxyMiddleware settings
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+.. setting:: HTTPPROXY_ENABLED
 .. setting:: HTTPPROXY_AUTH_ENCODING
+
+HTTPPROXY_ENABLED
+^^^^^^^^^^^^^^^^^
+
+Default: ``True``
+
+Whether or not to enable the :class:`HttpProxyMiddleware`.
 
 HTTPPROXY_AUTH_ENCODING
 ^^^^^^^^^^^^^^^^^^^^^^^
